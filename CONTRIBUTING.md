@@ -1,0 +1,80 @@
+# Contributing to quantcortex
+
+## Development Setup
+
+Use Python 3.11 through 3.14 from the repository root:
+
+```bash
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r requirements/dev.lock
+.venv/bin/python -m pip install --no-deps -e .
+```
+
+Run the required local checks before opening a pull request:
+
+```bash
+.venv/bin/ruff check .
+.venv/bin/python -m pytest tests/ -q --cov=quantcortex --cov-fail-under=60
+PYTHONPATH=. .venv/bin/python scripts/verify_brokers.py
+```
+
+## Change Discipline
+
+Keep changes within the existing pipeline boundaries. Preserve point-in-time
+data handling, allocation and exposure contracts, explicit transaction costs,
+paper-mode defaults, and fail-closed execution behavior. Changes to accounting,
+risk checks, order state, broker adapters, or causality require focused
+regression tests.
+
+Do not commit credentials, account data, raw or cached market data, executed
+notebook outputs, local state, or generated reports. Published derived figures
+must include provenance and be regenerable from a permitted owner-supplied
+input identified by its digest.
+
+## Integration and Evidence Changes
+
+Broker-adapter changes require the real SDK contract test in addition to the
+mock behavior script:
+
+```bash
+.venv/bin/python -m pip install -r requirements/brokers.lock
+.venv/bin/python -m pytest tests/test_broker_sdk_conformance.py -q
+PYTHONPATH=. .venv/bin/python scripts/verify_brokers.py
+```
+
+For report or paper changes, regenerate artifacts only from permitted local
+inputs. Source commits require explicit user approval. After approval, commit
+source changes and follow the [coordinated release flow](paper/README.md#coordinated-release):
+set an absolute `PYTHON_BIN` for detached worktrees, run
+`scripts/release_expansion_artifacts.sh local_data/expansion` first, then
+`scripts/release_paper_artifacts.sh local_data/published_rotation_prices.csv`
+from the same source commit, with no intervening commit. Changed release-critical
+source or inputs require fixed UTC `QUANTCORTEX_EXPANSION_GENERATED_AT` and
+`QUANTCORTEX_GENERATED_AT` values. Input-digest and provenance overrides are only
+for separately authorized new inputs. Leave them unset for source-only releases;
+these instructions do not authorize refetching data. The paper wrapper also
+refreshes the reviewed `docs/img/` performance gallery. Run the focused artifact
+tests and inspect every page of both the public and anonymous PDFs.
+Do not hand-edit generated tables, figures, manifests, or checksums.
+Use `quantcortex.backtest.metrics.plotting` for repository figures. Do not rely
+on color alone: pair important series with distinct line styles, markers, or
+hatching. Review paper figures at their final 5.5-inch text width and retain
+vector PDF output.
+
+## Dependencies
+
+Edit `pyproject.toml`, then regenerate every lock artifact with:
+
+```bash
+scripts/update_dependency_locks.sh
+```
+
+Commit `poetry.lock` and all changed files under `requirements/`. CI rejects
+lock drift.
+
+## Pull Requests
+
+Use short conventional commits such as `fix: reconcile cash returns`. A pull
+request should describe behavior, data and API assumptions, verification, and
+remaining limitations. Link relevant issues and include updated figures only
+when report output changes.

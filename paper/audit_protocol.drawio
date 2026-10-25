@@ -1,0 +1,416 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="drawio" version="31.3.2">
+  <diagram id="quantcortex-evaluation" name="QuantCortex evaluation">
+    <mxGraphModel grid="1" gridSize="10" page="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="generation-group" value="" style="rounded=0;html=1;fillColor=none;strokeColor=#64748B;strokeWidth=1.5;dashed=1;dashPattern=6 4;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;" vertex="1" parent="1" connectable="0">
+          <mxGeometry x="0" y="122" width="284" height="642" as="geometry" />
+        </mxCell>
+        <mxCell id="simulation-group" value="" style="rounded=0;html=1;fillColor=none;strokeColor=#64748B;strokeWidth=1.5;dashed=1;dashPattern=6 4;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;" vertex="1" parent="1" connectable="0">
+          <mxGeometry x="310" y="122" width="644" height="642" as="geometry" />
+        </mxCell>
+        <mxCell id="evaluation-group" value="" style="rounded=0;html=1;fillColor=none;strokeColor=#64748B;strokeWidth=1.5;dashed=1;dashPattern=6 4;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;" vertex="1" parent="1" connectable="0">
+          <mxGeometry x="980" y="122" width="344" height="642" as="geometry" />
+        </mxCell>
+        <mxCell id="generation-heading" value="Generation" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=28;text;strokeColor=none;fillColor=none;align=left;fontStyle=1;spacing=0;" vertex="1" parent="generation-group">
+          <mxGeometry x="12" y="12" width="260" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="engine-heading" value="Portfolio simulation" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=28;text;strokeColor=none;fillColor=none;align=left;fontStyle=1;spacing=0;" vertex="1" parent="simulation-group">
+          <mxGeometry x="12" y="12" width="620" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="evaluation-heading" value="Evaluation" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=28;text;strokeColor=none;fillColor=none;align=left;fontStyle=1;spacing=0;" vertex="1" parent="evaluation-group">
+          <mxGeometry x="12" y="12" width="320" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="generator" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E5F1F7;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="generation-group">
+          <mxGeometry x="12.0" y="53" width="260" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="generator-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="generator">
+          <mxGeometry as="geometry" x="0" y="0" width="260.0" height="44" />
+        </mxCell>
+        <mxCell id="generator-title" value="Model or rule" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="generator-header-fill">
+          <mxGeometry x="44" y="0" width="206.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="generator-body" value="Features known&lt;br&gt;by decision time&lt;br&gt;Model training:&lt;br&gt;labels mature&lt;br&gt;by fitting time" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="generator">
+          <mxGeometry x="10" y="52" width="240.0" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="tape" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E5F1F7;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="generation-group">
+          <mxGeometry x="12.0" y="294" width="260" height="242" as="geometry" />
+        </mxCell>
+        <mxCell id="tape-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="tape">
+          <mxGeometry as="geometry" x="0" y="0" width="260.0" height="44" />
+        </mxCell>
+        <mxCell id="tape-title" value="Allocations" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="tape-header-fill">
+          <mxGeometry x="44" y="0" width="206.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="tape-body" value="Decision time,&lt;br&gt;symbol, weight" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="tape">
+          <mxGeometry x="10" y="52" width="240.0" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="cost" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E5F3EE;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="simulation-group">
+          <mxGeometry x="12.0" y="53" width="270" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cost-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="cost">
+          <mxGeometry as="geometry" x="0" y="0" width="270.0" height="44" />
+        </mxCell>
+        <mxCell id="cost-title" value="Trade costs" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="cost-header-fill">
+          <mxGeometry x="44" y="0" width="216.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="cost-body" value="13 bp on gross&lt;br&gt;purchases and sales" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="cost">
+          <mxGeometry x="10" y="52" width="250.0" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="market" value="" style="shape=swimlane;startSize=300;horizontal=0;swimlaneFillColor=#F1F4F8;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E9EDF2;strokeColor=#667282;strokeWidth=2;container=1;pointerEvents=0;" vertex="1" parent="1">
+          <mxGeometry x="0" y="0.0" width="1324" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="market-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="market">
+          <mxGeometry as="geometry" x="0" y="0" width="300" height="70" />
+        </mxCell>
+        <mxCell id="market-title" value="Market inputs" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="market-header-fill">
+          <mxGeometry x="50" y="0" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="market-body" value="Adjusted prices, SHV returns, full date coverage" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="market">
+          <mxGeometry x="320" y="20" width="984" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sizing" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E5F3EE;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="simulation-group">
+          <mxGeometry x="12.0" y="260" width="270" height="196" as="geometry" />
+        </mxCell>
+        <mxCell id="sizing-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="sizing">
+          <mxGeometry as="geometry" x="0" y="0" width="270.0" height="44" />
+        </mxCell>
+        <mxCell id="sizing-title" value="Rebalance" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="sizing-header-fill">
+          <mxGeometry x="44" y="0" width="216.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="sizing-body" value="First strictly&lt;br&gt;later close&lt;br&gt;Size units against&lt;br&gt;NAV after costs" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="sizing">
+          <mxGeometry x="10" y="52" width="250.0" height="136" as="geometry" />
+        </mxCell>
+        <mxCell id="holdings" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#E5F3EE;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="simulation-group">
+          <mxGeometry x="332.0" y="250" width="300" height="216" as="geometry" />
+        </mxCell>
+        <mxCell id="holdings-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="holdings">
+          <mxGeometry as="geometry" x="0" y="0" width="300.0" height="44" />
+        </mxCell>
+        <mxCell id="holdings-title" value="Portfolio state" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="holdings-header-fill">
+          <mxGeometry x="44" y="0" width="246.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="holdings-body" value="Units fixed between&lt;br&gt;rebalances&lt;br&gt;Weights drift&lt;br&gt;SHV return on cash&lt;br&gt;Reconcile NAV" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="holdings">
+          <mxGeometry x="10" y="52" width="280.0" height="156" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#FBEFE5;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="evaluation-group">
+          <mxGeometry x="12.0" y="53" width="320" height="158" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="metrics">
+          <mxGeometry as="geometry" x="0" y="0" width="320.0" height="44" />
+        </mxCell>
+        <mxCell id="metrics-title" value="Performance" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="metrics-header-fill">
+          <mxGeometry x="44" y="0" width="266.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="metrics-body" value="Return, Sharpe&lt;br&gt;Drawdown, turnover&lt;br&gt;Arithmetic attribution" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="metrics">
+          <mxGeometry x="10" y="52" width="300.0" height="98" as="geometry" />
+        </mxCell>
+        <mxCell id="uncertainty" value="" style="shape=swimlane;startSize=44;horizontal=1;swimlaneFillColor=#ffffff;swimlaneLine=1;collapsible=0;whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#FBEFE5;strokeColor=#74808D;strokeWidth=1.4;container=1;pointerEvents=0;" vertex="1" parent="evaluation-group">
+          <mxGeometry x="12.0" y="435" width="320" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="uncertainty-header-fill" value="" style="html=1;rounded=0;fillColor=none;strokeColor=none;strokeWidth=1;container=1;pointerEvents=0;" vertex="1" parent="uncertainty">
+          <mxGeometry as="geometry" x="0" y="0" width="320.0" height="44" />
+        </mxCell>
+        <mxCell id="uncertainty-title" value="Uncertainty" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=26;rounded=0;fillColor=none;strokeColor=none;fontStyle=1;align=left;spacing=0;verticalAlign=middle;" vertex="1" parent="uncertainty-header-fill">
+          <mxGeometry x="44" y="0" width="266.0" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="uncertainty-body" value="Common date draws&lt;br&gt;Circular block bootstrap&lt;br&gt;Reuse fits and decisions&lt;br&gt;Pointwise intervals" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="uncertainty">
+          <mxGeometry x="10" y="52" width="300.0" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="generation-to-tape" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.7;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="generation-group" source="generator" target="tape">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tape-to-sizing" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=2.6;endArrow=block;endFill=1;exitX=1;exitY=0.2644628099173554;entryX=0;entryY=0.5;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;endSize=8;" edge="1" parent="1" source="tape" target="sizing">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sizing-cost-coupling" value="Joint solve" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;startArrow=block;startFill=1;" edge="1" parent="1" source="sizing" target="cost">
+          <mxGeometry relative="1" as="geometry" x="0" y="0" />
+        </mxCell>
+        <mxCell id="prices-to-sizing" value="Prices" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0;exitY=0.5;entryX=0.8;entryY=0;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="market-data-split" target="sizing">
+          <mxGeometry relative="1" as="geometry" x="-0.35" y="-2">
+            <Array as="points">
+              <mxPoint x="538" y="344" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="data-to-holdings" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="market-data-split" target="holdings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sizing-to-holdings" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=2.6;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;endSize=8;" edge="1" parent="1" source="sizing" target="holdings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="holdings-to-next-sizing" value="Next rebalance" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="holdings" target="sizing">
+          <mxGeometry relative="1" as="geometry" x="0" y="0">
+            <Array as="points">
+              <mxPoint x="792" y="690" />
+              <mxPoint x="457" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="records" value="Daily returns, ledgers&lt;br&gt;and SHV benchmark" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;rounded=0;fillColor=#F1F4F8;strokeColor=#667282;strokeWidth=1.5;align=center;spacing=0;" vertex="1" parent="evaluation-group">
+          <mxGeometry x="12.0" y="322" width="320" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="holdings-to-records" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=2.6;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;endSize=8;" edge="1" parent="1" source="holdings" target="records">
+          <mxGeometry relative="1" as="geometry">
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="records-to-metrics" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.7;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="evaluation-group" source="records" target="metrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="records-to-intervals" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.7;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="evaluation-group" source="records" target="uncertainty">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="shv-to-records" value="SHV" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0.7303625377643505;exitY=1;entryX=0;entryY=0.25;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="market" target="records">
+          <mxGeometry relative="1" as="geometry" x="-0.75" y="0">
+            <Array as="points">
+              <mxPoint x="967" y="462" />
+            </Array>
+            <mxPoint x="0" y="-24" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="generator-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="generator-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="tape-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="tape-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="cost-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="cost-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="market-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="market-header-fill">
+          <mxGeometry as="geometry" x="10" y="21" width="30" height="28" />
+        </mxCell>
+        <mxCell id="sizing-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="sizing-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="holdings-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="holdings-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="metrics-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="metrics-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="uncertainty-icon" value="" style="html=1;group;pointerEvents=0;" vertex="1" parent="uncertainty-header-fill">
+          <mxGeometry as="geometry" x="8" y="8" width="30" height="28" />
+        </mxCell>
+        <mxCell id="generator-icon-part-1" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="generator-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="15" y="8" />
+            <mxPoint as="targetPoint" x="5" y="20" />
+            <Array as="points">
+              <mxPoint x="15" y="14" />
+              <mxPoint x="5" y="14" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="generator-icon-part-2" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="generator-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="15" y="14" />
+            <mxPoint as="targetPoint" x="25" y="20" />
+            <Array as="points">
+              <mxPoint x="25" y="14" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="generator-icon-part-3" value="" style="html=1;rounded=0;fillColor=#E5F1F7;strokeColor=#0072B2;strokeWidth=2.4;" vertex="1" parent="generator-icon">
+          <mxGeometry as="geometry" x="11" y="0" width="8" height="8" />
+        </mxCell>
+        <mxCell id="generator-icon-part-4" value="" style="html=1;rounded=0;fillColor=#E5F1F7;strokeColor=#0072B2;strokeWidth=2.4;" vertex="1" parent="generator-icon">
+          <mxGeometry as="geometry" x="1" y="20" width="8" height="8" />
+        </mxCell>
+        <mxCell id="generator-icon-part-5" value="" style="html=1;rounded=0;fillColor=#E5F1F7;strokeColor=#0072B2;strokeWidth=2.4;" vertex="1" parent="generator-icon">
+          <mxGeometry as="geometry" x="21" y="20" width="8" height="8" />
+        </mxCell>
+        <mxCell id="tape-icon-part-1" value="" style="html=1;rounded=0;fillColor=none;strokeColor=#0072B2;strokeWidth=2.4;" vertex="1" parent="tape-icon">
+          <mxGeometry as="geometry" x="1" y="1" width="28" height="26" />
+        </mxCell>
+        <mxCell id="tape-icon-part-2" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="tape-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="9" />
+            <mxPoint as="targetPoint" x="29" y="9" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tape-icon-part-3" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="tape-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="18" />
+            <mxPoint as="targetPoint" x="29" y="18" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tape-icon-part-4" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="tape-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="10" y="1" />
+            <mxPoint as="targetPoint" x="10" y="27" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tape-icon-part-5" value="" style="html=1;strokeColor=#0072B2;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="tape-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="20" y="1" />
+            <mxPoint as="targetPoint" x="20" y="27" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cost-icon-part-1" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="cost-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="4" y="0" />
+            <mxPoint as="targetPoint" x="4" y="0" />
+            <Array as="points">
+              <mxPoint x="26" y="0" />
+              <mxPoint x="26" y="28" />
+              <mxPoint x="4" y="28" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cost-icon-part-2" value="" style="html=1;rounded=0;fillColor=none;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="8" y="4" width="14" height="6" />
+        </mxCell>
+        <mxCell id="cost-icon-part-3" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="8" y="15" width="2" height="2" />
+        </mxCell>
+        <mxCell id="cost-icon-part-4" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="8" y="22" width="2" height="2" />
+        </mxCell>
+        <mxCell id="cost-icon-part-5" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="15" y="15" width="2" height="2" />
+        </mxCell>
+        <mxCell id="cost-icon-part-6" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="15" y="22" width="2" height="2" />
+        </mxCell>
+        <mxCell id="cost-icon-part-7" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="22" y="15" width="2" height="2" />
+        </mxCell>
+        <mxCell id="cost-icon-part-8" value="" style="html=1;rounded=0;fillColor=#00875A;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="cost-icon">
+          <mxGeometry as="geometry" x="22" y="22" width="2" height="2" />
+        </mxCell>
+        <mxCell id="market-icon-part-1" value="" style="html=1;strokeColor=#667282;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="market-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="1" />
+            <mxPoint as="targetPoint" x="29" y="27" />
+            <Array as="points">
+              <mxPoint x="1" y="27" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="market-icon-part-2" value="" style="html=1;strokeColor=#667282;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="market-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="4" y="19" />
+            <mxPoint as="targetPoint" x="29" y="12" />
+            <Array as="points">
+              <mxPoint x="10" y="9" />
+              <mxPoint x="17" y="17" />
+              <mxPoint x="23" y="7" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sizing-icon-part-1" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=classic;endSize=5;endFill=1;rounded=0;" edge="1" parent="sizing-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="7" />
+            <mxPoint as="targetPoint" x="29" y="7" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sizing-icon-part-2" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=classic;endSize=5;endFill=1;rounded=0;" edge="1" parent="sizing-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="29" y="21" />
+            <mxPoint as="targetPoint" x="1" y="21" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="holdings-icon-part-1" value="" style="html=1;rounded=0;fillColor=none;strokeColor=#00875A;strokeWidth=2.4;" vertex="1" parent="holdings-icon">
+          <mxGeometry as="geometry" x="1" y="7" width="28" height="20" />
+        </mxCell>
+        <mxCell id="holdings-icon-part-2" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="holdings-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="9" y="7" />
+            <mxPoint as="targetPoint" x="21" y="7" />
+            <Array as="points">
+              <mxPoint x="9" y="1" />
+              <mxPoint x="21" y="1" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="holdings-icon-part-3" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="holdings-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="15" />
+            <mxPoint as="targetPoint" x="29" y="15" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="holdings-icon-part-4" value="" style="html=1;strokeColor=#00875A;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="holdings-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="15" y="12" />
+            <mxPoint as="targetPoint" x="15" y="19" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="metrics-icon-part-1" value="" style="html=1;rounded=0;fillColor=#D55E00;strokeColor=#D55E00;strokeWidth=2.4;" vertex="1" parent="metrics-icon">
+          <mxGeometry as="geometry" x="2" y="14" width="6" height="12" />
+        </mxCell>
+        <mxCell id="metrics-icon-part-2" value="" style="html=1;rounded=0;fillColor=#D55E00;strokeColor=#D55E00;strokeWidth=2.4;" vertex="1" parent="metrics-icon">
+          <mxGeometry as="geometry" x="12" y="2" width="6" height="24" />
+        </mxCell>
+        <mxCell id="metrics-icon-part-3" value="" style="html=1;rounded=0;fillColor=#D55E00;strokeColor=#D55E00;strokeWidth=2.4;" vertex="1" parent="metrics-icon">
+          <mxGeometry as="geometry" x="22" y="9" width="6" height="17" />
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-1" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="7" />
+            <mxPoint as="targetPoint" x="23" y="7" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-2" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1" y="3" />
+            <mxPoint as="targetPoint" x="1" y="11" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-3" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="23" y="3" />
+            <mxPoint as="targetPoint" x="23" y="11" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-4" value="" style="html=1;ellipse;fillColor=#D55E00;strokeColor=#D55E00;strokeWidth=2.4;" vertex="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" x="10" y="5" width="4" height="4" />
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-5" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="8" y="21" />
+            <mxPoint as="targetPoint" x="29" y="21" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-6" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="8" y="17" />
+            <mxPoint as="targetPoint" x="8" y="25" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-7" value="" style="html=1;strokeColor=#D55E00;strokeWidth=2.4;endArrow=none;endSize=5;endFill=1;rounded=0;" edge="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="29" y="17" />
+            <mxPoint as="targetPoint" x="29" y="25" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uncertainty-icon-part-8" value="" style="html=1;ellipse;fillColor=#D55E00;strokeColor=#D55E00;strokeWidth=2.4;" vertex="1" parent="uncertainty-icon">
+          <mxGeometry as="geometry" x="18" y="19" width="4" height="4" />
+        </mxCell>
+        <mxCell id="history-to-generation" value="Price history" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=block;endFill=1;exitX=0.02;exitY=1;entryX=1;entryY=0.5;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="market" target="generator">
+          <mxGeometry relative="1" as="geometry" x="-0.48" y="-2">
+            <Array as="points">
+              <mxPoint x="26.48" y="100" />
+              <mxPoint x="297" y="100" />
+              <mxPoint x="297" y="281" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="market-data-split" value="" style="ellipse;html=1;fillColor=#334155;strokeColor=#334155;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="788" y="340" width="8" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="market-to-data-split" value="Prices and&lt;br&gt;cash returns" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#334155;strokeWidth=1.8;endArrow=none;endFill=1;exitX=0.5981873111782477;exitY=1;entryX=0.5;entryY=0;fontFamily=DejaVu Serif;fontSize=24;fontColor=#172033;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="market" target="market-data-split">
+          <mxGeometry relative="1" as="geometry" x="0" y="-2" />
+        </mxCell>
+        <mxCell id="tape-checks-compartment" value="" style="rounded=0;html=1;fillColor=#F4F6F8;strokeColor=#74808D;strokeWidth=1.4;" vertex="1" parent="tape">
+          <mxGeometry as="geometry" x="0" y="128" width="260" height="114" />
+        </mxCell>
+        <mxCell id="tape-checks" value="All symbols listed&lt;br&gt;Finite weights&lt;br&gt;Exposure limits" style="whiteSpace=wrap;html=1;fontFamily=DejaVu Serif;fontColor=#172033;fontSize=24;text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacing=0;" vertex="1" parent="tape-checks-compartment">
+          <mxGeometry as="geometry" x="10" y="12" width="240" height="90" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

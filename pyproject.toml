@@ -1,0 +1,134 @@
+[project]
+name = "quantcortex"
+version = "0.1.0"
+description = "Modular quantitative research and paper-execution platform"
+keywords = ["quantitative-finance", "backtesting", "portfolio", "research"]
+authors = [
+    { name = "Kevin Lee", email = "kevinlee69720@g.ucla.edu" },
+]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "matplotlib>=3.8",
+    "pyarrow>=14.0",
+]
+
+[project.urls]
+Repository = "https://github.com/magnaprog/quantcortex"
+Issues = "https://github.com/magnaprog/quantcortex/issues"
+Documentation = "https://github.com/magnaprog/quantcortex#readme"
+Paper = "https://github.com/magnaprog/quantcortex/blob/main/paper/quantcortex_audit_neurips2026.pdf"
+
+[project.optional-dependencies]
+ml = [
+    "xgboost>=2.0",
+    "lightgbm>=4.1",
+    "catboost>=1.2",
+]
+rl = [
+    "stable-baselines3[extra]>=2.2",
+    "gymnasium>=0.29",
+    "torch>=2.12",
+]
+regime = ["hmmlearn>=0.3"]
+nlp = [
+    "transformers>=4.38",
+    "torch>=2.12",
+]
+brokers = [
+    "alpaca-py>=0.43.4,<0.44",
+    "ib-async>=2.1,<2.2",
+    "ccxt>=4.2",
+]
+providers = [
+    "yfinance>=0.2.37",
+    "polygon-api-client>=1.13",
+    "fredapi>=0.5",
+    "lxml>=5.0",
+]
+storage = [
+    "redis>=5.0",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+]
+all = [
+    "xgboost>=2.0",
+    "lightgbm>=4.1",
+    "catboost>=1.2",
+    "stable-baselines3[extra]>=2.2",
+    "gymnasium>=0.29",
+    "hmmlearn>=0.3",
+    "transformers>=4.38",
+    "torch>=2.12",
+    "alpaca-py>=0.43.4,<0.44",
+    "ib-async>=2.1,<2.2",
+    "ccxt>=4.2",
+    "yfinance>=0.2.37",
+    "polygon-api-client>=1.13",
+    "fredapi>=0.5",
+    "lxml>=5.0",
+    "redis>=5.0",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+]
+
+[tool.poetry]
+packages = [
+    { include = "quantcortex" },
+]
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.10,<1.11"
+
+[tool.poetry.group.test.dependencies]
+jsonschema = { version = ">=4.20,<5", extras = ["format-nongpl"] }
+packaging = ">=24"
+pytest = ">=8.0"
+pytest-cov = ">=4.1"
+ruff = ">=0.3"
+
+[tool.poetry.group.dev.dependencies]
+jupyter = ">=1.0"
+nbconvert = ">=7.0"
+ipykernel = ">=6.29"
+setuptools = "<82"
+
+[tool.poetry.group.build.dependencies]
+build = ">=1.2"
+
+[build-system]
+requires = ["poetry-core==2.4.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# The repository root holds the `quantcortex` package (no src/ layout), so put
+# it on the import path: `import quantcortex.portfolio`, etc. resolve from root.
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--tb=short -ra"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+# Research notebooks set up sys.path and the matplotlib backend before imports.
+# They are excluded from Ruff and executed separately in notebook CI.
+extend-exclude = ["research", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "RUF012"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Operational scripts intentionally set the matplotlib backend / warnings /
+# logging levels before importing modules that pull those libraries in, so
+# module-level imports are not at the very top (E402 is expected, not a defect).
+"scripts/*" = ["E402"]

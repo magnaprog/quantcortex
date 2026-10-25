@@ -1,0 +1,232 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: lint + tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Provenance tests verify that generated artifacts reference an
+          # ancestor source commit, which is unavailable in a depth-1 clone.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements/test.lock
+
+      # Install the scientific core and test tools only. This checks that lazy
+      # imports allow modules to load without optional dependencies (boosting
+      # libraries, torch, hmmlearn, broker SDKs, ...).
+      - name: Install core dependencies
+        run: python -m pip install -r requirements/test.lock
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tests (pytest)
+        run: pytest tests/ -q --tb=short --cov=quantcortex --cov-report=term --cov-fail-under=60
+
+  notebooks:
+    name: notebook smoke (py3.11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements/notebooks.lock
+
+      - name: Install notebook dependencies
+        run: python -m pip install -r requirements/notebooks.lock
+
+      - name: Build deterministic test-only fixtures
+        run: python tests/build_notebook_fixtures.py /tmp/quantcortex-notebook-fixtures
+
+      - name: Execute research notebooks
+        env:
+          MPLCONFIGDIR: /tmp/quantcortex-mpl
+          QUANTCORTEX_PRICES_CSV: /tmp/quantcortex-notebook-fixtures/prices.csv
+          QUANTCORTEX_OHLCV_CSV: /tmp/quantcortex-notebook-fixtures/aapl_ohlcv.csv
+        run: |
+          jupyter nbconvert --execute --ExecutePreprocessor.timeout=180 --ExecutePreprocessor.shutdown_kernel=immediate --to notebook --output-dir /tmp/quantcortex-notebook-output research/*.ipynb
+
+      - name: Verify notebook figures rendered
+        run: python tests/verify_notebook_outputs.py /tmp/quantcortex-notebook-output
+
+  broker-sdks:
+    name: optional broker SDK conformance (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements/test.lock
+            requirements/brokers.lock
+
+      - name: Install package with broker SDKs
+        run: python -m pip install -r requirements/test.lock -r requirements/brokers.lock
+
+      - name: Verify real SDK request and model contracts
+        env:
+          PYTHONPATH: .
+        run: |
+          pytest tests/test_broker_sdk_conformance.py -q
+          python scripts/verify_brokers.py
+
+  package:
+    name: build + install smoke (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements/build.lock
+            requirements/core.lock
+
+      # Tests run from the repo root with pythonpath=["."], so also build and
+      # install the wheel in a clean environment. Check selected public imports
+      # and guard against packaging the restricted market-data snapshot.
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install -r requirements/build.lock
+          python -m build
+
+      - name: Install wheel into a clean venv and verify package contents
+        run: |
+          python -m venv /tmp/wheeltest
+          /tmp/wheeltest/bin/pip install -r requirements/core.lock
+          /tmp/wheeltest/bin/pip install --no-deps dist/*.whl
+          /tmp/wheeltest/bin/pip check
+          cd /tmp && /tmp/wheeltest/bin/python -c "from pathlib import Path; import quantcortex, quantcortex.portfolio.base, quantcortex.backtest.engines.vectorized, quantcortex.strategies.base_strategy; csv = Path(quantcortex.__file__).resolve().parent / 'data' / 'sample' / 'rotation_prices.csv'; assert not csv.exists(), f'restricted market-data snapshot packaged: {csv}'; print('packaged import OK; market-data snapshot absent')"
+
+  dependency-lock:
+    name: dependency lock drift (py3.12)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install locked Poetry tooling
+        run: python -m pip install poetry==2.4.1 poetry-plugin-export==1.10.0
+
+      - name: Check lock and exported requirement files
+        run: |
+          poetry check
+          poetry export --only main --without-hashes --output /tmp/core.lock
+          poetry export --only main,test --without-hashes --output /tmp/test.lock
+          poetry export --only main,dev --without-hashes --output /tmp/notebooks.lock
+          poetry export --only main,test,dev --without-hashes --output /tmp/dev.lock
+          poetry export --only main -E brokers --without-hashes --output /tmp/brokers.lock
+          poetry export --only main -E brokers -E providers -E storage -E regime --without-hashes --output /tmp/runtime.lock
+          poetry export --only build --without-hashes --output /tmp/build.lock
+          diff -u requirements/core.lock /tmp/core.lock
+          diff -u requirements/test.lock /tmp/test.lock
+          diff -u requirements/notebooks.lock /tmp/notebooks.lock
+          diff -u requirements/dev.lock /tmp/dev.lock
+          diff -u requirements/brokers.lock /tmp/brokers.lock
+          diff -u requirements/runtime.lock /tmp/runtime.lock
+          diff -u requirements/build.lock /tmp/build.lock
+
+  paper-build:
+    name: deterministic paper build (Tectonic 0.16.9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Poppler and pinned Tectonic binary
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends poppler-utils
+          curl --fail --location --retry 3 \
+            'https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.16.9/tectonic-0.16.9-x86_64-unknown-linux-gnu.tar.gz' \
+            --output /tmp/tectonic.tar.gz
+          echo 'f3c825128095dc3399ea11c08c18035b33050a216930c295c79e8eb11bd21de4  /tmp/tectonic.tar.gz' | sha256sum --check
+          mkdir -p /tmp/tectonic
+          tar -xzf /tmp/tectonic.tar.gz -C /tmp/tectonic
+          echo '/tmp/tectonic' >> "$GITHUB_PATH"
+
+      - name: Load reviewed build metadata
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(python -c 'import json; print(json.load(open("paper/build_manifest.json"))["source_date_epoch"])')" >> "$GITHUB_ENV"
+          echo "PAPER_SOURCE_COMMIT=$(python -c 'import json; print(json.load(open("paper/build_manifest.json"))["source_commit"])')" >> "$GITHUB_ENV"
+
+      - name: Rebuild and verify byte-identical paper artifacts
+        env:
+          PYTHON_BIN: python
+          TECTONIC_EXPECTED_VERSION: 0.16.9
+          TECTONIC_BUNDLE_SHA256: 6ffe055852f8faf66c0acbe1a7fb27f87b869a90bad1204f3bf4d9683f597c7c
+        run: |
+          scripts/build_paper.sh
+          git diff --exit-code -- \
+            paper/build_manifest.json \
+            paper/quantcortex_audit_anonymous.pdf \
+            paper/quantcortex_audit_anonymous.sha256 \
+            paper/quantcortex_audit_neurips2026.pdf \
+            paper/quantcortex_audit_neurips2026.sha256 \
+            paper/quantcortex_audit_neurips2026.sources.sha256
+
+  container:
+    name: container build + offline smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate Compose configuration
+        env:
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+        run: docker compose config --quiet
+
+      - name: Build pinned application image
+        run: docker build --tag quantcortex:ci .
+
+      - name: Verify read-only default command
+        run: docker run --rm --read-only --tmpfs /tmp quantcortex:ci
+
+      - name: Run the offline execution cycle
+        run: >-
+          docker run --rm --read-only --tmpfs /tmp quantcortex:ci
+          python scripts/paper_trade_cycle.py --offline

@@ -1,0 +1,62 @@
+# Production Readiness
+
+The repository is a research and guarded paper-execution platform. Passing CI
+does not certify it for production capital. Complete and independently review
+the controls below before any real-money deployment.
+
+## Broker Certification
+
+- Alpaca uses `alpaca-py`; Interactive Brokers uses `ib_async`. CI constructs
+  requests with the installed SDK models, and offline mocks cover request and
+  response mapping.
+- Run authenticated paper tests for permissions, reconnects, rejects, partial
+  fills, cancellations, duplicate submissions, and venue-side idempotency.
+- Reconcile broker positions, cash, orders, and fills before every trading cycle.
+
+## State and Recovery
+
+- The paper workflow persists positions, known orders, submission intents, and
+  reconciliation metadata as one versioned snapshot with optimistic concurrency.
+- It durably marks submission intent `ATTEMPTING` before a broker call. An
+  uncertain outcome blocks automatic retry until broker reconciliation.
+- Add drills for backup restoration, corruption, concurrent writes, and disaster
+  recovery in Redis and the local file backend. Tests cover file concurrency;
+  Redis transaction behavior still needs an integration test with a real service.
+
+## Research and Data
+
+- Use data that passes `docs/data-source-due-diligence.md`, with an explicit
+  license or permission basis and retained provenance.
+- Obtain exact filing timestamps, point-in-time membership, and delisted-security
+  prices for production single-name research.
+- Validate corporate actions, calendars, stale-price policy, and symbol mapping
+  against the intended venues.
+- The paper CLI rejects incomplete panels and requires the latest finalized
+  NYSE daily session. Replace its conservative 17:00 New York cutoff with an
+  authoritative venue or data-vendor completion signal before production use.
+- Replace flat slippage with calibrated spread, volatility, size, and capacity
+  models when expected order size makes market impact material.
+
+## Deployment Controls
+
+- Python dependencies have committed locks, and container base images are
+  pinned by digest. The Dockerfile's apt package installation is not version
+  pinned, so those controls do not make the entire image reproducible. CI
+  rejects stale dependency exports.
+- Run container, database, Redis, and broker integration tests in a staging
+  environment matching production.
+- The application container runs as a non-root user with a read-only root
+  filesystem. Add managed secrets, least privilege, structured logs, metrics,
+  alerting, and immutable audit records before production deployment.
+- Define kill switches, exposure limits, incident ownership, rollback steps,
+  and independent release approval.
+- Paper market orders submitted after a finalized close fill no earlier than
+  the next session; the reference experiment models execution at the next bar's
+  close. That backtest assumption provides no evidence of live fill quality.
+
+## Release Evidence
+
+Generate publication artifacts from a detached clean worktree and archive the
+exact source revision, environment, dependency lock, data digest, configuration,
+research trial count, validation report, paper-account certification evidence,
+and sign-off for each release. Resolve every checklist item before release.
