@@ -1,0 +1,62 @@
+{
+  "strategy_gross_minus_cash": {
+    "annualized_mean": 0.01492857385999876,
+    "block_length": 21,
+    "ci_95_lower": -0.02476086357438147,
+    "ci_95_upper": 0.05547615013042176,
+    "observations": 2011,
+    "positive_draw_fraction": 0.7712,
+    "replications": 5000,
+    "seed": 42
+  },
+  "strategy_gross_minus_exposure_matched_equal_weight": {
+    "annualized_mean": -0.030495944658212416,
+    "block_length": 21,
+    "ci_95_lower": -0.05523245039013493,
+    "ci_95_upper": -0.005665112830086786,
+    "observations": 2011,
+    "positive_draw_fraction": 0.007,
+    "replications": 5000,
+    "seed": 42
+  },
+  "strategy_minus_cash": {
+    "annualized_mean": -0.0026455337511851044,
+    "block_length": 21,
+    "ci_95_lower": -0.0428672308557419,
+    "ci_95_upper": 0.03824142427364887,
+    "observations": 2011,
+    "positive_draw_fraction": 0.468,
+    "replications": 5000,
+    "seed": 42
+  },
+  "strategy_minus_exposure_matched_equal_weight": {
+    "annualized_mean": -0.048070052269396285,
+    "block_length": 21,
+    "ci_95_lower": -0.07432256180128302,
+    "ci_95_upper": -0.022697765068910032,
+    "observations": 2011,
+    "positive_draw_fraction": 0.0,
+    "replications": 5000,
+    "seed": 42
+  },
+  "strategy_minus_target_exposure_matched_equal_weight_net": {
+    "annualized_mean": -0.03862362498745829,
+    "block_length": 21,
+    "ci_95_lower": -0.06404393460003778,
+    "ci_95_upper": -0.01352837300850187,
+    "observations": 2011,
+    "positive_draw_fraction": 0.0008,
+    "replications": 5000,
+    "seed": 42
+  },
+  "target_exposure_matched_equal_weight_net_minus_cash": {
+    "annualized_mean": 0.035978091236273185,
+    "block_length": 21,
+    "ci_95_lower": 0.0017167792730403441,
+    "ci_95_upper": 0.0701336603824119,
+    "observations": 2011,
+    "positive_draw_fraction": 0.981,
+    "replications": 5000,
+    "seed": 42
+  }
+}

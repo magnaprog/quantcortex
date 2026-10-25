@@ -1,0 +1,16 @@
+component,label,observations,block_length,replications,seed,annualized_mean,ci_95_lower,ci_95_upper,positive_draw_fraction
+active_risky_allocation,Active risky allocation,2011,5,5000,42,-0.03049594466,-0.05859599348,-0.001948934308,0.0166
+dynamic_exposure_timing,Dynamic exposure timing,2011,5,5000,42,0.00538345985,-0.02639489538,0.03728781421,0.6236
+passive_risky_exposure,Passive risky exposure,2011,5,5000,42,0.04004105867,0.007248521754,0.07297059614,0.9928
+implementation_cost,Modeled implementation cost,2011,5,5000,42,-0.01757410761,-0.02004709488,-0.01522832698,0
+net_excess_over_cash,Net excess over cash,2011,5,5000,42,-0.002645533751,-0.04467498521,0.03966560195,0.4526
+active_risky_allocation,Active risky allocation,2011,21,5000,42,-0.03049594466,-0.05523245039,-0.00566511283,0.007
+dynamic_exposure_timing,Dynamic exposure timing,2011,21,5000,42,0.00538345985,-0.02348188039,0.03448252497,0.6364
+passive_risky_exposure,Passive risky exposure,2011,21,5000,42,0.04004105867,0.008467887407,0.07044984455,0.9926
+implementation_cost,Modeled implementation cost,2011,21,5000,42,-0.01757410761,-0.02124186791,-0.01408941496,0
+net_excess_over_cash,Net excess over cash,2011,21,5000,42,-0.002645533751,-0.04286723086,0.03824142427,0.468
+active_risky_allocation,Active risky allocation,2011,63,5000,42,-0.03049594466,-0.05645860014,-0.005790051544,0.008
+dynamic_exposure_timing,Dynamic exposure timing,2011,63,5000,42,0.00538345985,-0.02186848528,0.03255383111,0.6468
+passive_risky_exposure,Passive risky exposure,2011,63,5000,42,0.04004105867,0.01393121012,0.06715227795,0.9966
+implementation_cost,Modeled implementation cost,2011,63,5000,42,-0.01757410761,-0.02199519447,-0.01327851549,0
+net_excess_over_cash,Net excess over cash,2011,63,5000,42,-0.002645533751,-0.03612017865,0.030675791,0.4424

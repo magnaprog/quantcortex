@@ -1,0 +1,2 @@
+comparator,net_cagr,gross_cagr,net_cash_excess_sharpe,gross_cash_excess_sharpe,annualized_volatility,max_drawdown,annualized_one_way_turnover,annualized_gross_traded_notional,arithmetic_sum_transaction_cost_return_drag,mean_gross_exposure,fully_cash_fraction
+target_exposure_matched_equal_weight_net,0.06103331986,0.07107325455,0.6728033067,0.848611852,0.05365254074,-0.06222586714,7.241674852,7.241674852,0.07518184186,0.3097897808,0.4689209349

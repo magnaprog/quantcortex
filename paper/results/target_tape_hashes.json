@@ -1,0 +1,62 @@
+{
+  "full": {
+    "canonical_payload_sha256": "9f9cf798b7fb3d8bd55f1fdd15923ee8f140e6abc406b2ddeab55028392bfdf4",
+    "decision_count": 521,
+    "max_gross": 1.0,
+    "record_count": 3126,
+    "schema_version": 1,
+    "symbols": [
+      "GLD",
+      "QQQ",
+      "SPY",
+      "TLT",
+      "VGT",
+      "VIG"
+    ]
+  },
+  "no_regime": {
+    "canonical_payload_sha256": "b1b0e69bc31089afd341e086294db41aae1ce109684b158c73ecca669fcdeb66",
+    "decision_count": 521,
+    "max_gross": 1.0,
+    "record_count": 3126,
+    "schema_version": 1,
+    "symbols": [
+      "GLD",
+      "QQQ",
+      "SPY",
+      "TLT",
+      "VGT",
+      "VIG"
+    ]
+  },
+  "no_vol_scaler": {
+    "canonical_payload_sha256": "359cc3ca8ed16e25c3c24c244f27d45b1000dd595e9fdb4c4bce2acfffbabeec",
+    "decision_count": 521,
+    "max_gross": 1.0,
+    "record_count": 3126,
+    "schema_version": 1,
+    "symbols": [
+      "GLD",
+      "QQQ",
+      "SPY",
+      "TLT",
+      "VGT",
+      "VIG"
+    ]
+  },
+  "signal_only": {
+    "canonical_payload_sha256": "5e385c1d4e00131d8d6f6dd1f964d5d241c215a1b9c01bb420214636f9232674",
+    "decision_count": 521,
+    "max_gross": 1.0,
+    "record_count": 3126,
+    "schema_version": 1,
+    "symbols": [
+      "GLD",
+      "QQQ",
+      "SPY",
+      "TLT",
+      "VGT",
+      "VIG"
+    ]
+  }
+}

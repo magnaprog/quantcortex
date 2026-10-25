@@ -1,0 +1,118 @@
+[
+  {
+    "complete_rows": 3018,
+    "dropped_incomplete_rows": 0,
+    "evaluation_sessions": 2011,
+    "first_date": "2014-01-02",
+    "input_sha256": "e3c7338257d3ea35ccc1a94a5d296c58fd1a752cf64c3d5d04c91d5036fc9a8c",
+    "last_date": "2025-12-31",
+    "missing_by_symbol": {
+      "SHV": 0,
+      "XLB": 0,
+      "XLE": 0,
+      "XLF": 0,
+      "XLI": 0,
+      "XLK": 0,
+      "XLP": 0,
+      "XLU": 0,
+      "XLV": 0,
+      "XLY": 0
+    },
+    "panel": "us_sector_etfs",
+    "pre_evaluation_months": 48,
+    "pre_evaluation_sessions": 1007,
+    "protocol_path": "paper/expansion/protocol.json",
+    "protocol_sha256": "e49e41a12a19fa5404a573ba5e21eb8a2888e616985f8c610d9652866923315c",
+    "provider": "Yahoo Finance via yfinance",
+    "provider_rows": 3018,
+    "provider_terms_independently_verified": false,
+    "raw_data_committed": false,
+    "request": {
+      "actions": false,
+      "auto_adjust": false,
+      "repair": false,
+      "request_end_exclusive": "2026-01-01",
+      "request_start": "2014-01-02",
+      "selected_field": "Adj Close",
+      "threads": false
+    },
+    "retrieved_at": "2026-08-29T15:00:36Z",
+    "schema_version": 1,
+    "symbols": [
+      "XLB",
+      "XLE",
+      "XLF",
+      "XLI",
+      "XLK",
+      "XLP",
+      "XLU",
+      "XLV",
+      "XLY",
+      "SHV"
+    ],
+    "terms_urls": [
+      "https://ranaroussi.github.io/yfinance/",
+      "https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html"
+    ],
+    "yfinance_version": "1.5.1"
+  },
+  {
+    "complete_rows": 3018,
+    "dropped_incomplete_rows": 0,
+    "evaluation_sessions": 2011,
+    "first_date": "2014-01-02",
+    "input_sha256": "aeb1cad415f5edf72385e557e5426d993fcdd87a6fb1c178ff533a2641a768ac",
+    "last_date": "2025-12-31",
+    "missing_by_symbol": {
+      "EWA": 0,
+      "EWC": 0,
+      "EWG": 0,
+      "EWH": 0,
+      "EWJ": 0,
+      "EWL": 0,
+      "EWP": 0,
+      "EWQ": 0,
+      "EWS": 0,
+      "EWU": 0,
+      "SHV": 0
+    },
+    "panel": "country_equity_etfs",
+    "pre_evaluation_months": 48,
+    "pre_evaluation_sessions": 1007,
+    "protocol_path": "paper/expansion/protocol.json",
+    "protocol_sha256": "e49e41a12a19fa5404a573ba5e21eb8a2888e616985f8c610d9652866923315c",
+    "provider": "Yahoo Finance via yfinance",
+    "provider_rows": 3018,
+    "provider_terms_independently_verified": false,
+    "raw_data_committed": false,
+    "request": {
+      "actions": false,
+      "auto_adjust": false,
+      "repair": false,
+      "request_end_exclusive": "2026-01-01",
+      "request_start": "2014-01-02",
+      "selected_field": "Adj Close",
+      "threads": false
+    },
+    "retrieved_at": "2026-08-29T15:00:36Z",
+    "schema_version": 1,
+    "symbols": [
+      "EWA",
+      "EWC",
+      "EWG",
+      "EWH",
+      "EWJ",
+      "EWL",
+      "EWP",
+      "EWQ",
+      "EWS",
+      "EWU",
+      "SHV"
+    ],
+    "terms_urls": [
+      "https://ranaroussi.github.io/yfinance/",
+      "https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html"
+    ],
+    "yfinance_version": "1.5.1"
+  }
+]

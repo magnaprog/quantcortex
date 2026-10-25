@@ -1,0 +1,29 @@
+{
+  "anonymous_pdf": {
+    "path": "paper/quantcortex_audit_anonymous.pdf",
+    "sha256": "17cc922149d9e063aacc031cbe66dc388d7166516dc25281d629317ef62a77b8"
+  },
+  "path_base": "repository_root",
+  "pdf": {
+    "path": "paper/quantcortex_audit_neurips2026.pdf",
+    "sha256": "3c34a1b897664079d21bc3e4afe68b291bfa28a56abc96bb40eb0254a4c2d460"
+  },
+  "schema_version": 2,
+  "source_commit": "8b523a06d3ef83e0f04137d5b7535ea49d04e48f",
+  "source_date_epoch": 1792916676,
+  "source_manifest": {
+    "entry_path_base": "repository_root",
+    "path": "paper/quantcortex_audit_neurips2026.sources.sha256",
+    "sha256": "95123b29a15dc94089528736dd6b2df1056e81606854eea134da23f486211648"
+  },
+  "submission_pdf": {
+    "path": "output/pdf/quantcortex_tae_camera_ready.pdf",
+    "sha256": "79ed8ec7b96674641b7bb8a5c00f3243d09790b22420293812a43f5ebed42cac",
+    "tracked": false
+  },
+  "tectonic_bundle": {
+    "name": "default_bundle_v33.tar",
+    "sha256": "6ffe055852f8faf66c0acbe1a7fb27f87b869a90bad1204f3bf4d9683f597c7c"
+  },
+  "tectonic_version": "0.16.9"
+}
