@@ -1,0 +1,75 @@
+# quantcortex local stack: app + Redis (state) + TimescaleDB (market data).
+#
+#   docker compose up -d redis timescaledb   # infra only
+#   docker compose run --rm app python scripts/paper_trade_cycle.py --offline
+#
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quantcortex:0.1.0
+    working_dir: /app
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      ALPACA_API_KEY: ${ALPACA_API_KEY:-}
+      ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY:-}
+      ALPACA_BASE_URL: ${ALPACA_BASE_URL:-https://paper-api.alpaca.markets}
+      IB_HOST: ${IB_HOST:-host.docker.internal}
+      IB_PORT: ${IB_PORT:-7497}
+      IB_CLIENT_ID: ${IB_CLIENT_ID:-1}
+      IB_ACCOUNT: ${IB_ACCOUNT:-}
+      CCXT_API_KEY: ${CCXT_API_KEY:-}
+      CCXT_SECRET: ${CCXT_SECRET:-}
+      CCXT_ACCOUNT_CURRENCY: ${CCXT_ACCOUNT_CURRENCY:-USDT}
+      POLYGON_API_KEY: ${POLYGON_API_KEY:-}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      FMP_API_KEY: ${FMP_API_KEY:-}
+      REDIS_URL: redis://redis:6379/0
+      TIMESCALE_URL: postgresql://${POSTGRES_USER:-quant}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@timescaledb:5432/${POSTGRES_DB:-quantcortex}
+      MPLCONFIGDIR: /tmp/matplotlib
+      PYTHONPATH: /app
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    # Check imports and exit by default; override to run strategies / backtests.
+    command: ["python", "-c", "import quantcortex.alpha, quantcortex.backtest, quantcortex.data, quantcortex.execution, quantcortex.portfolio, quantcortex.strategies; print('quantcortex container ready')"]
+
+  redis:
+    image: redis:7-alpine@sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16@sha256:51ac20ec295699c05573adf896e2449d8b3a026223a951905d5763687409d7d4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-quant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-quantcortex}
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis_data:
+  timescale_data:
