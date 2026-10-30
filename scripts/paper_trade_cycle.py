@@ -1,0 +1,783 @@
+"""Preview or submit a paper rebalance, with an offline dry-run option.
+
+This CLI follows ``research/05_live_trading_bridge.ipynb``: data -> strategy ->
+pre-trade risk -> order translation -> broker. It supports a deterministic
+local dry run and paper-only submission.
+
+Choose the price source explicitly:
+
+* **offline dry-run** (``--offline``): generates deterministic test prices,
+  computes the target book, runs the pre-trade risk gate, translates to orders
+  against a notional account, and walks them through the local order-lifecycle
+  state machine (NEW -> SUBMITTED -> FILLED). Nothing leaves the process.
+* **paper preview** (``--live-yfinance`` and ``ALPACA_*`` set): connects to the
+  Alpaca *paper* account, reads equity/positions, computes the orders that would
+  be sent, and prints them without submitting.
+* **paper submit** (add ``--submit``): places orders on the paper account.
+  Deterministic client IDs and persisted attempts guard against duplicate
+  submission after a restart. Unresolved open orders block submission; another
+  unresolved ledger identifier for the same symbol also blocks a new submission.
+  Sell and buy legs use separate invocations with refreshed account snapshots.
+
+    python scripts/paper_trade_cycle.py --offline
+    python scripts/paper_trade_cycle.py --live-yfinance
+    python scripts/paper_trade_cycle.py --live-yfinance --submit
+
+It never touches a live (real-money) endpoint: it forces a paper broker and
+refuses to submit unless the configured base URL is a paper endpoint.
+
+Market orders can fill in the current venue session when it is open. Their
+execution timing differs from the research protocol's next-close fills.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import logging
+import math
+import os
+import sys
+from datetime import datetime, timezone
+
+import numpy as np
+import pandas as pd
+
+logging.getLogger("hmmlearn").setLevel(logging.ERROR)
+# The CLI reports live-fetch failures itself; suppress duplicate provider logs.
+logging.getLogger("yfinance").setLevel(logging.CRITICAL)
+# joblib/loky can print a physical-core detection traceback on hosts where CPU
+# topology is unreadable; pin it so the --offline dry-run stays clean (respects
+# an existing override).
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+
+from quantcortex.data.processors.calendar import (
+    TradingCalendar,
+    first_session_each_week,
+)
+from quantcortex.execution.brokers.alpaca_broker import is_alpaca_paper_endpoint
+from quantcortex.execution.brokers.base import BrokerError
+from quantcortex.execution.order_manager import (
+    Order,
+    OrderError,
+    OrderManager,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    validate_order_request,
+)
+from quantcortex.execution.position_manager import PositionManager
+from quantcortex.execution.pre_trade_risk import PreTradeRiskCheck, PreTradeRiskError
+from quantcortex.execution.state_persistence import (
+    StatePersistence,
+    StatePersistenceError,
+)
+from quantcortex.portfolio.base import PortfolioMode
+from quantcortex.strategies.multi_asset_rotation import MultiAssetRotation
+
+UNIVERSE = ["QQQ", "VGT", "GLD", "TLT", "SPY", "VIG"]
+DEFAULT_CAPITAL = 100_000.0
+MAX_POSITION_WEIGHT = MultiAssetRotation.DEFAULT_MAX_POSITION_WEIGHT
+SUBMISSION_LEDGER_KEY = "paper_submission_attempts"
+YFINANCE_NOTICE = (
+    "Live Yahoo Finance data is fetched through yfinance. Review Yahoo's terms "
+    "and yfinance's legal disclaimer at https://ranaroussi.github.io/yfinance/."
+)
+LIVE_BAR_FINALIZATION_HOUR_ET = 17
+
+
+def validate_live_price_matrix(
+    prices: pd.DataFrame,
+    *,
+    now=None,
+    calendar: TradingCalendar | None = None,
+) -> pd.DataFrame:
+    """Validate a complete panel ending at the latest finalized NYSE session.
+
+    Daily provider bars are rejected before a conservative 17:00 New York
+    cutoff on the current session. Missing values are never forward-filled: a
+    stale or incomplete symbol must stop the cycle before target generation.
+    """
+    if not isinstance(prices, pd.DataFrame) or prices.empty:
+        raise ValueError("live prices must be a non-empty DataFrame")
+    if prices.columns.has_duplicates:
+        raise ValueError("live price symbols must be unique")
+    missing = sorted(set(UNIVERSE) - set(prices.columns))
+    unexpected = sorted(set(prices.columns) - set(UNIVERSE))
+    if missing or unexpected:
+        raise ValueError(
+            f"live price symbols do not match the strategy universe; "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+    if not isinstance(prices.index, pd.DatetimeIndex):
+        raise TypeError("live prices must use a DatetimeIndex")
+    if prices.index.hasnans or prices.index.has_duplicates:
+        raise ValueError("live price dates must be unique and valid")
+
+    panel = prices.loc[:, UNIVERSE].copy()
+    index = panel.index
+    if index.tz is not None:
+        index = index.tz_convert("America/New_York").tz_localize(None)
+    if not index.equals(index.normalize()):
+        raise ValueError("live prices must contain finalized daily bars, not intraday data")
+    if not index.is_monotonic_increasing:
+        raise ValueError("live price dates must be sorted in increasing order")
+    panel.index = index
+    panel = panel.apply(pd.to_numeric, errors="coerce")
+    values = panel.to_numpy(dtype=float)
+    if not np.all(np.isfinite(values)) or np.any(values <= 0.0):
+        raise ValueError("live prices must be complete, finite, and strictly positive")
+
+    now_et = pd.Timestamp.now(tz="America/New_York") if now is None else pd.Timestamp(now)
+    if pd.isna(now_et):
+        raise ValueError("current time must be valid")
+    if now_et.tz is None:
+        now_et = now_et.tz_localize("America/New_York")
+    else:
+        now_et = now_et.tz_convert("America/New_York")
+    today = now_et.tz_localize(None).normalize()
+    trading_calendar = calendar or TradingCalendar("NYSE")
+    after_finalize = now_et.hour >= LIVE_BAR_FINALIZATION_HOUR_ET
+    if trading_calendar.is_trading_day(today) and after_finalize:
+        expected = today
+    else:
+        expected = trading_calendar.previous_session(today)
+
+    last = panel.index[-1]
+    if last < expected:
+        raise ValueError(
+            f"live price panel is stale: last bar {last.date()}, expected {expected.date()}"
+        )
+    if last > expected:
+        raise ValueError(
+            f"live price panel includes an unfinalized or future bar {last.date()}; "
+            f"latest allowed session is {expected.date()}"
+        )
+    return panel
+
+
+def load_prices(offline: bool = False) -> pd.DataFrame:
+    """Load synthetic dry-run prices or explicitly requested live prices.
+
+    With ``offline=True``, generate the seeded synthetic series without
+    contacting a provider.
+    """
+    if offline:
+        rng = np.random.default_rng(0)
+        dates = pd.bdate_range("2022-01-01", periods=600)
+        values = 100 * np.exp(
+            np.cumsum(rng.normal(0.0003, 0.011, (600, len(UNIVERSE))), axis=0)
+        )
+        return pd.DataFrame(values, index=dates, columns=UNIVERSE)
+
+    print(YFINANCE_NOTICE, file=sys.stderr)
+    from quantcortex.data.providers.yfinance_provider import YFinanceProvider
+
+    prices = YFinanceProvider().get_prices(UNIVERSE, start="2022-01-01")
+    if prices is None or prices.empty or prices.shape[0] <= 200:
+        raise RuntimeError("yfinance returned insufficient price history")
+    return validate_live_price_matrix(prices)
+
+
+def latest_target(prices: pd.DataFrame) -> pd.Series:
+    """Return the latest weekly target, omitting weights within 1e-9 of zero.
+
+    A flat book is represented by an empty Series.
+    """
+    weekly = first_session_each_week(prices.index)
+    weights = MultiAssetRotation().generate_weights(prices, weekly)
+    if weights.empty:
+        raise RuntimeError("strategy produced no weekly targets")
+    target = weights.iloc[-1]
+    return target[target.abs() > 1e-9]
+
+
+def build_orders(target: pd.Series, prices: pd.DataFrame, capital: float, current: dict):
+    last_px = prices.iloc[-1]
+    pm = PositionManager()
+    orders = pm.target_weights_to_orders(
+        target,
+        last_px,
+        capital=capital,
+        current_positions=current,
+    )
+    return sorted(
+        orders,
+        key=lambda order: (
+            0 if OrderSide(order["side"]) is OrderSide.SELL else 1,
+            order["symbol"],
+        ),
+    )
+
+
+def _intent_request(intent: dict) -> Order:
+    if not isinstance(intent, dict):
+        raise OrderError("paper order intent must be a dictionary")
+    try:
+        return validate_order_request(
+            intent["symbol"],
+            intent["side"],
+            intent["quantity"],
+            OrderType.MARKET,
+        )
+    except KeyError as exc:
+        raise OrderError(f"paper order intent is missing {exc.args[0]!r}") from exc
+
+
+def make_client_order_id(as_of, intent: dict) -> str:
+    """Build a deterministic id for one dated rebalance intent."""
+    timestamp = pd.Timestamp(as_of)
+    if pd.isna(timestamp):
+        raise ValueError("paper order as-of timestamp must be valid")
+    request = _intent_request(intent)
+    date_token = timestamp.date().strftime("%Y%m%d")
+    payload = "|".join(
+        [
+            "quantcortex-multi-asset-rotation",
+            date_token,
+            request.symbol,
+            request.side.value,
+            format(request.quantity, ".12g"),
+        ]
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
+    return f"qc-mar-{date_token}-{digest}"
+
+
+def _load_submission_ledger(store: StatePersistence) -> dict:
+    ledger = store.load_state(SUBMISSION_LEDGER_KEY, default={})
+    if not isinstance(ledger, dict):
+        raise StatePersistenceError("paper submission ledger must be a JSON object")
+    for client_id, record in ledger.items():
+        if not isinstance(client_id, str) or not client_id.strip():
+            raise StatePersistenceError("paper submission ledger has an invalid id")
+        if not isinstance(record, dict):
+            raise StatePersistenceError(
+                f"paper submission ledger entry {client_id!r} is invalid"
+            )
+    return ledger
+
+
+def _persist_submission_state(
+    store: StatePersistence,
+    ledger: dict,
+    snapshot_context: dict | None,
+) -> None:
+    """Persist the submission ledger alone or as one coherent snapshot."""
+    if snapshot_context is None:
+        store.save_state(SUBMISSION_LEDGER_KEY, ledger)
+        return
+
+    snapshot = store.save_execution_snapshot(
+        positions=snapshot_context["positions"],
+        orders=snapshot_context["orders"],
+        intents=ledger,
+        metadata=snapshot_context["metadata"],
+        expected_revision=snapshot_context["revision"],
+    )
+    snapshot_context["revision"] = snapshot.revision
+    snapshot_context["positions"] = snapshot.positions
+    snapshot_context["orders"] = snapshot.orders
+    snapshot_context["metadata"] = snapshot.metadata
+
+
+def _remember_snapshot_order(snapshot_context: dict | None, order: Order) -> None:
+    if snapshot_context is None:
+        return
+    known_orders = {
+        known_order.order_id: known_order
+        for known_order in snapshot_context["orders"]
+    }
+    known_orders[order.order_id] = order
+    snapshot_context["orders"] = list(known_orders.values())
+
+
+def _initialise_submission_state(
+    store: StatePersistence,
+    *,
+    positions: dict,
+    orders: list[Order],
+    metadata: dict,
+) -> tuple[dict, dict | None]:
+    """Load or migrate submission state and persist the pre-submit snapshot."""
+    load_snapshot = getattr(store, "load_execution_snapshot", None)
+    save_snapshot = getattr(store, "save_execution_snapshot", None)
+    if not callable(load_snapshot) or not callable(save_snapshot):
+        return _load_submission_ledger(store), None
+
+    previous = load_snapshot()
+    if previous is None:
+        ledger = _load_submission_ledger(store)
+        known_orders = list(orders)
+        revision = None
+        prior_metadata = {}
+        migrated_legacy_ledger = bool(ledger)
+    else:
+        ledger = dict(previous.intents)
+        known_by_id = {order.order_id: order for order in previous.orders}
+        known_by_id.update({order.order_id: order for order in orders})
+        known_orders = list(known_by_id.values())
+        revision = previous.revision
+        prior_metadata = dict(previous.metadata)
+        migrated_legacy_ledger = bool(
+            prior_metadata.get("migrated_legacy_submission_ledger")
+        )
+
+    snapshot_context = {
+        "positions": positions,
+        "orders": known_orders,
+        "metadata": {
+            **prior_metadata,
+            **metadata,
+            "migrated_legacy_submission_ledger": migrated_legacy_ledger,
+        },
+        "revision": revision,
+    }
+    _persist_submission_state(store, ledger, snapshot_context)
+    return ledger, snapshot_context
+
+
+def _ledger_record(as_of, request: Order, state: str) -> dict:
+    return {
+        "as_of": pd.Timestamp(as_of).date().isoformat(),
+        "symbol": request.symbol,
+        "side": request.side.value,
+        "quantity": request.quantity,
+        "state": state,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _assert_order_matches_intent(order: Order, request: Order) -> None:
+    if (
+        order.symbol != request.symbol
+        or order.side is not request.side
+        or order.order_type is not OrderType.MARKET
+        or not math.isclose(
+            order.quantity,
+            request.quantity,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        )
+    ):
+        raise BrokerError(
+            "Alpaca order returned for the client id does not match the "
+            "requested symbol, side, quantity, and market-order type."
+        )
+
+
+def _reconcile_prior_submissions(
+    broker,
+    store: StatePersistence,
+    ledger: dict,
+    snapshot_context: dict | None,
+) -> bool:
+    """Refresh persisted attempts without submitting or guessing missing outcomes."""
+    updates = {}
+    matched_orders = []
+    for client_id, record in ledger.items():
+        if not isinstance(client_id, str) or not client_id.strip():
+            raise StatePersistenceError("paper submission ledger has an invalid id")
+        if not isinstance(record, dict):
+            raise StatePersistenceError("paper submission ledger entry is invalid")
+        if record.get("state") in {"FILLED", "CANCELLED", "REJECTED"}:
+            continue
+        existing = broker.find_order_by_client_order_id(client_id)
+        if existing is None:
+            # Retain the uncertainty and the existing same-symbol retry guard.
+            continue
+        request = _intent_request(record)
+        try:
+            expected_id = make_client_order_id(record["as_of"], record)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise StatePersistenceError("persisted paper intent has an invalid as_of") from exc
+        if expected_id != client_id:
+            raise StatePersistenceError("persisted paper intent does not match its client id")
+        existing.validate()
+        _assert_order_matches_intent(existing, request)
+        if (
+            "broker_order_id" in record
+            and record["broker_order_id"] != existing.order_id
+        ):
+            raise BrokerError("Alpaca lookup returned a different broker order id")
+        updates[client_id] = {
+            **record,
+            "state": existing.status.value,
+            "broker_order_id": existing.order_id,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        matched_orders.append(existing)
+    if not updates:
+        return False
+    ledger.update(updates)
+    for order in matched_orders:
+        _remember_snapshot_order(snapshot_context, order)
+    _persist_submission_state(store, ledger, snapshot_context)
+    return True
+
+
+def _reconcile_or_submit(
+    broker,
+    store: StatePersistence,
+    ledger: dict,
+    as_of,
+    intent: dict,
+    *,
+    retry_confirmed_missing: bool = False,
+    snapshot_context: dict | None = None,
+) -> tuple[Order, bool, str]:
+    """Reconcile a client id and block unresolved same-symbol replacements.
+
+    The explicit retry override applies only to this identifier. Other pending
+    or unknown identifiers must be reconciled to terminal ledger states before
+    a new submission for their symbol. Broker lookup can still reconcile an
+    existing order without submitting anything.
+    """
+    request = _intent_request(intent)
+    client_id = make_client_order_id(as_of, intent)
+    existing = broker.find_order_by_client_order_id(client_id)
+    if existing is not None:
+        _assert_order_matches_intent(existing, request)
+        record = _ledger_record(as_of, request, existing.status.value)
+        record["broker_order_id"] = existing.order_id
+        ledger[client_id] = record
+        _remember_snapshot_order(snapshot_context, existing)
+        _persist_submission_state(store, ledger, snapshot_context)
+        return existing, False, client_id
+
+    prior = ledger.get(client_id)
+    if prior is not None and not retry_confirmed_missing:
+        raise BrokerError(
+            f"Prior submission attempt {client_id!r} is absent from the broker "
+            "lookup, so its outcome is uncertain. Do not retry until the Alpaca "
+            "dashboard or support confirms it was not routed; then use "
+            "--retry-confirmed-missing."
+        )
+
+    for other_id, other_record in ledger.items():
+        if other_id == client_id:
+            continue
+        if not isinstance(other_record, dict):
+            raise StatePersistenceError(
+                f"paper submission ledger entry {other_id!r} is invalid"
+            )
+        if other_record.get("state") in (
+            OrderStatus.FILLED.value,
+            OrderStatus.CANCELLED.value,
+            OrderStatus.REJECTED.value,
+        ):
+            continue
+        prior_symbol = other_record.get("symbol")
+        if not isinstance(prior_symbol, str) or not prior_symbol.strip():
+            raise StatePersistenceError(
+                f"unresolved paper submission ledger entry {other_id!r} "
+                "has no valid symbol"
+            )
+        if prior_symbol.strip().casefold() == request.symbol.casefold():
+            raise BrokerError(
+                f"Unresolved submission {other_id!r} for {prior_symbol.strip()} "
+                f"blocks replacement identifier {client_id!r}. Reconcile the "
+                "prior identifier before submitting another order for this symbol; "
+                "--retry-confirmed-missing applies only to the same identifier."
+            )
+
+    record = _ledger_record(as_of, request, "ATTEMPTING")
+    if prior is not None:
+        record["operator_confirmed_missing_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+    ledger[client_id] = record
+    # Persist before the network call. A crash or timeout must leave a durable
+    # marker that prevents an automatic duplicate submission on the next run.
+    _persist_submission_state(store, ledger, snapshot_context)
+    try:
+        placed = broker.submit_order(
+            request.symbol,
+            request.side,
+            request.quantity,
+            client_order_id=client_id,
+        )
+        _assert_order_matches_intent(placed, request)
+    except (BrokerError, OrderError):
+        ledger[client_id] = _ledger_record(as_of, request, "UNKNOWN")
+        try:
+            _persist_submission_state(store, ledger, snapshot_context)
+        except StatePersistenceError:
+            pass
+        raise
+
+    record = _ledger_record(as_of, request, placed.status.value)
+    record["broker_order_id"] = placed.order_id
+    ledger[client_id] = record
+    _remember_snapshot_order(snapshot_context, placed)
+    _persist_submission_state(store, ledger, snapshot_context)
+    return placed, True, client_id
+
+
+def show_orders(orders, last_px) -> None:
+    if not orders:
+        print("  (no orders: target matches current positions)")
+        return
+    for o in orders:
+        notional = o["quantity"] * float(last_px.get(o["symbol"], float("nan")))
+        print(f"  {o['side'].value:>4} {o['quantity']:>10.2f}  {o['symbol']:<6} (~${notional:,.0f})")
+
+
+def run_offline(prices, target, forced: bool = False) -> int:
+    reason = "--offline forced; no broker calls" if forced else "no ALPACA_* credentials found"
+    print(f"MODE: offline dry-run ({reason})\n")
+    capital = DEFAULT_CAPITAL
+    w_vec = target.reindex(UNIVERSE).fillna(0.0).to_numpy()
+    risk = PreTradeRiskCheck(
+        max_position_weight=MAX_POSITION_WEIGHT,
+        allowed_symbols=UNIVERSE,
+    )
+    ok, violations = risk.check_weights(
+        w_vec, mode=PortfolioMode.LONG_ONLY
+    )
+    print(f"pre-trade risk: ok={ok} violations={violations}")
+    orders = build_orders(target, prices, capital, current={})
+    risk.assert_safe(
+        weights=w_vec,
+        mode=PortfolioMode.LONG_ONLY,
+        orders=orders,
+        prices=prices.iloc[-1],
+        capital=capital,
+        current_positions={},
+    )
+    print(f"\norders that would be sent (notional capital ${capital:,.0f}):")
+    show_orders(orders, prices.iloc[-1])
+
+    # Walk them through the local lifecycle to demonstrate the state machine.
+    om = OrderManager()
+    last_px = prices.iloc[-1]
+    for i, o in enumerate(orders):
+        oid = f"sim-{i:03d}"
+        om.create_order(oid, o["symbol"], OrderSide(o["side"]), float(o["quantity"]))
+        om.submit(oid)
+        om.fill(oid, fill_price=float(last_px[o["symbol"]]))
+    states = {o.order_id: o.status.value for o in om.orders}
+    if states:
+        if not all(s == "FILLED" for s in states.values()):
+            raise RuntimeError("simulated lifecycle did not fill every order")
+        print(f"\nsimulated lifecycle: {len(states)} orders NEW -> SUBMITTED -> FILLED")
+    print(
+        "\nSet ALPACA_API_KEY / ALPACA_SECRET_KEY (paper), rerun with "
+        "--live-yfinance, and add --submit to place paper orders."
+    )
+    return 0
+
+
+def run_paper(
+    prices,
+    target,
+    submit: bool,
+    *,
+    retry_confirmed_missing: bool = False,
+) -> int:
+    from quantcortex.execution.brokers.alpaca_broker import AlpacaBroker
+
+    base = os.environ.get("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+    if not is_alpaca_paper_endpoint(base):
+        print(f"REFUSING: ALPACA_BASE_URL={base!r} is not a paper endpoint. "
+              "This script only trades paper.")
+        return 2
+
+    broker = AlpacaBroker(paper=True)
+    try:
+        broker.connect()
+        open_orders = broker.get_open_orders()
+        if open_orders:
+            print(
+                "REFUSING: the paper account has unresolved open orders. "
+                "Reconcile or cancel them before computing a new target."
+            )
+            for order in open_orders:
+                print(
+                    f"  {order.order_id} {order.side.value} {order.quantity:g} "
+                    f"{order.symbol} -> {order.status.value}"
+                )
+            return 1
+
+        acct = broker.get_account()
+        broker_positions = broker.get_positions()
+        positions = {position.symbol: position.quantity for position in broker_positions}
+        capital = float(acct.equity)
+        if not np.isfinite(capital) or capital <= 0.0:
+            raise BrokerError("Alpaca paper account returned non-positive equity")
+        print(
+            f"MODE: paper {'SUBMIT' if submit else 'preview'} | "
+            f"equity ${capital:,.2f} | {len(positions)} open positions\n"
+        )
+
+        w_vec = target.reindex(UNIVERSE).fillna(0.0).to_numpy()
+        risk = PreTradeRiskCheck(
+            max_position_weight=MAX_POSITION_WEIGHT,
+            allowed_symbols=UNIVERSE,
+        )
+        orders = build_orders(target, prices, capital, current=positions)
+        risk.assert_safe(
+            weights=w_vec,
+            mode=PortfolioMode.LONG_ONLY,
+            orders=orders,
+            prices=prices.iloc[-1],
+            capital=capital,
+            current_positions=positions,
+        )
+
+        print("orders:")
+        show_orders(orders, prices.iloc[-1])
+        if not submit:
+            print("\npreview only; re-run with --submit to place paper orders.")
+            return 0
+
+        store = StatePersistence(namespace="qc-paper-cycle")
+        ledger, snapshot_context = _initialise_submission_state(
+            store,
+            positions={position.symbol: position for position in broker_positions},
+            orders=open_orders,
+            metadata={
+                "broker": "alpaca-paper",
+                "cycle_as_of": pd.Timestamp(prices.index[-1]).date().isoformat(),
+                "account_equity": capital,
+                "position_observation": "pre-submission",
+                "order_records": "last-known broker state for submitted intents",
+            },
+        )
+        if _reconcile_prior_submissions(broker, store, ledger, snapshot_context):
+            print(
+                "Prior orders were reconciled. Re-run from a fresh account "
+                "snapshot before submitting any new intent."
+            )
+            return 1
+        om = OrderManager()
+        failures = 0
+        reconciled = False
+        sell_orders = [
+            order for order in orders if OrderSide(order["side"]) is OrderSide.SELL
+        ]
+        buy_orders = [
+            order for order in orders if OrderSide(order["side"]) is OrderSide.BUY
+        ]
+        phase = sell_orders if sell_orders else buy_orders
+        for order in phase:
+            try:
+                placed, submitted_now, client_id = _reconcile_or_submit(
+                    broker,
+                    store,
+                    ledger,
+                    prices.index[-1],
+                    order,
+                    retry_confirmed_missing=retry_confirmed_missing,
+                    snapshot_context=snapshot_context,
+                )
+                if not submitted_now:
+                    reconciled = True
+                    print(
+                        f"  reconciled {client_id}: {placed.order_id} "
+                        f"-> {placed.status.value}; no order resent"
+                    )
+                    break
+                om.register(placed)
+                print(
+                    f"  submitted {order['side'].value} {order['quantity']:.2f} "
+                    f"{order['symbol']} [{client_id}] -> {placed.status.value}"
+                )
+                if placed.status in {OrderStatus.CANCELLED, OrderStatus.REJECTED}:
+                    failures += 1
+                    break
+            except (BrokerError, OrderError) as exc:
+                failures += 1
+                print(f"  FAILED {order['symbol']}: {exc}")
+                break
+
+        print(f"\nsubmitted {len(om.orders)} paper orders in this invocation.")
+        if sell_orders and buy_orders and not failures and not reconciled:
+            print(
+                "buy orders were deliberately deferred. Re-run after all sell "
+                "orders fill so positions and buying power are refreshed."
+            )
+            return 1
+        if reconciled:
+            print(
+                "A prior order was reconciled. Re-run from a fresh account "
+                "snapshot before submitting any remaining intent."
+            )
+            return 1
+        if om.orders:
+            print(
+                "Reconcile fills before the next cycle; open orders block a new "
+                "rebalance."
+            )
+        return 1 if failures else 0
+    except PreTradeRiskError as exc:
+        print(f"pre-trade risk REJECTED the book: {exc}")
+        return 1
+    except (BrokerError, OrderError, StatePersistenceError, ValueError) as exc:
+        print(f"paper cycle failed: {exc}")
+        return 1
+    finally:
+        broker.disconnect()
+
+
+def main(argv) -> int:
+    ap = argparse.ArgumentParser(description="quantcortex paper rebalance cycle")
+    ap.add_argument("--submit", action="store_true", help="actually place paper orders")
+    ap.add_argument(
+        "--retry-confirmed-missing",
+        action="store_true",
+        help=(
+            "retry a locally recorded submission only after Alpaca confirms the "
+            "client order id was not routed"
+        ),
+    )
+    source = ap.add_mutually_exclusive_group(required=True)
+    source.add_argument(
+        "--offline",
+        action="store_true",
+        help="use the labeled synthetic dry-run; never touch network or broker",
+    )
+    source.add_argument(
+        "--live-yfinance",
+        action="store_true",
+        help="explicitly fetch live prices through yfinance",
+    )
+    args = ap.parse_args(argv[1:])
+    if args.offline and args.submit:
+        ap.error("--submit requires --live-yfinance")
+    if args.retry_confirmed_missing and not args.submit:
+        ap.error("--retry-confirmed-missing requires --submit")
+    has_creds = bool(
+        os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_SECRET_KEY")
+    )
+    if args.submit and not has_creds:
+        print(
+            "paper submission requires ALPACA_API_KEY and ALPACA_SECRET_KEY",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        prices = load_prices(offline=args.offline)
+        target = latest_target(prices)
+    except Exception as exc:
+        print(f"cycle setup failed: {exc}", file=sys.stderr)
+        return 1
+    print(f"universe: {UNIVERSE}")
+    print(f"target weights:\n{target.round(3).to_string() if not target.empty else '  (flat / no signal)'}\n")
+    if args.offline:
+        return run_offline(prices, target, forced=True)
+    return (
+        run_paper(
+            prices,
+            target,
+            args.submit,
+            retry_confirmed_missing=args.retry_confirmed_missing,
+        )
+        if has_creds
+        else run_offline(prices, target)
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

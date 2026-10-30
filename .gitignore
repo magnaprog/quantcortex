@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test / coverage / cache
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Secrets & runtime state
+.env
+.env.*
+!.env.example
+.qc_state.json
+*.qc_state.json
+
+# Data / model artifacts
+*.parquet
+data_cache/
+*.pkl
+*.pt
+local_data/*
+!local_data/README.md
+
+# Local reports and review artifacts
+reports/
+
+# Local build products
+output/
+tmp/
+
+# OS
+.DS_Store
+
+# Manuscript and presentation assets stay in the development repository.
+/paper/
+/poster/
+/posters/
